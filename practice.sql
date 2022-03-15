@@ -1,54 +1,126 @@
-select * FROM employees
-where first_name like ("%jack%");
+SELECT 
+    *
+FROM
+    employees
+WHERE
+    first_name LIKE ('%jack%');
 
 
-select * from employees
-where first_name not like ("%jack%");
+SELECT 
+    *
+FROM
+    employees
+WHERE
+    first_name NOT LIKE ('%jack%');
 
-select * from salaries
-where salary between 66000 and 70000;
+SELECT 
+    *
+FROM
+    salaries
+WHERE
+    salary BETWEEN 66000 AND 70000;
 
-select * from salaries 
-where emp_no between "10004" and "10012";
+SELECT 
+    *
+FROM
+    salaries
+WHERE
+    emp_no BETWEEN '10004' AND '10012';
 
-select dept_name from departments
-where dept_no between "d003" and "d006";
+SELECT 
+    dept_name
+FROM
+    departments
+WHERE
+    dept_no BETWEEN 'd003' AND 'd006';
 
-select * from employees where first_name is not null; 
+SELECT 
+    *
+FROM
+    employees
+WHERE
+    first_name IS NOT NULL;
 
-select * from employees where first_name is null; 
-select  dept_name from departments
-where dept_no is not null;
+SELECT 
+    *
+FROM
+    employees
+WHERE
+    first_name IS NULL;
+SELECT 
+    dept_name
+FROM
+    departments
+WHERE
+    dept_no IS NOT NULL;
 
 /** list of emloyees hired after the 1st of january **/
-select * from employees
-where hire_date > "2000-01-01";
+SELECT 
+    *
+FROM
+    employees
+WHERE
+    hire_date > '2000-01-01';
 
-select * from employees
-where gender= "F" and hire_date>="2000-01-01";
+SELECT 
+    *
+FROM
+    employees
+WHERE
+    gender = 'F'
+        AND hire_date >= '2000-01-01';
 
-select * from salaries 
-where salary>150000;
-select distinct gender from employees;
+SELECT 
+    *
+FROM
+    salaries
+WHERE
+    salary > 150000;
+SELECT DISTINCT
+    gender
+FROM
+    employees;
 /** Obtain a list with all different “hire dates” from the “employees” table. **/
-select distinct hire_date from employees;
-/** the nb of employees in the database **/
+SELECT DISTINCT
+    hire_date
+FROM
+    employeese nb of employees in the database **/
 
-select count(emp_no) from employees; 
+SELECT 
+    COUNT(emp_no)
+FROM
+    employees;
 
 /** nb of all names***/
-select count(last_name) as frequency from employees; 
+SELECT 
+    COUNT(last_name) AS frequency
+FROM
+    employees;
 /** nb of different distinct names***/
-select count(distinct last_name) from employees;
+SELECT 
+    COUNT(DISTINCT last_name)
+FROM
+    employees;
 
 /**How many annual contracts with a value higher than or equal to $100,000 have been registered in the salaries table?**/
 
-select count(emp_no) from salaries where salary >= "100000";
+SELECT 
+    COUNT(emp_no)
+FROM
+    salaries
+WHERE
+    salary >= '100000';
 /**How many managers do we have in the “employees” database?**/
-select count(*) from dept_manager;
+SELECT COUNT(*)
+FROM
+    dept_manager;
 
 /** order by first name **/ 
-select * FROM employees ORDER BY first_name DESC; 
+SELECT 
+    *
+FROM
+    employees
+ORDER BY first_name DESC; 
 /** order by first name and last name i.e order the employees sharing same irst name bu last name   **/ 
 select * FROM employees ORDER BY first_name, last_name ; 
 
@@ -58,7 +130,12 @@ select * from employees order by hire_date DESC;
 DESCRIBE employees; 
 
 -- get distinct names and the number of times they oppear frequency 
-select first_name, count(first_name) as frequency from employees group by first_name order by first_name DESC;
+SELECT 
+    first_name, COUNT(first_name) AS frequency
+FROM
+    employees
+GROUP BY first_name
+ORDER BY first_name DESC;
 
 /** Write a query that obtains two columns. 
 The first column must contain annual salaries higher than 80,000 dollars
@@ -408,3 +485,359 @@ FROM
         dept_manager dm) as a
 
 ORDER BY -a.emp_no DESC;
+
+/** names of all managers in the company 
+using subqueries **/
+SELECT 
+    e.first_name, e.last_name
+FROM
+    employees e
+WHERE
+    e.emp_no IN (SELECT 
+            dm.emp_no
+        FROM
+            dept_manager dm);
+/** Extract the information about all department
+ managers who were hired between the 1st of January 1990 and the 1st of January 1995. **/ 
+SELECT 
+    *
+FROM
+    dept_manager dm 
+WHERE
+    dm.emp_no IN (SELECT 
+            e.emp_no
+        FROM
+            employees e
+        WHERE
+            e.hire_date BETWEEN '1990-01-01' AND '1995-01-01');
+            
+/** the entire information for all 
+employees whose job title is “Assistant Engineer”. **/
+SELECT 
+    *
+FROM
+    employees e
+WHERE
+    EXISTS( SELECT 
+            *
+        FROM
+            titles t
+        WHERE
+            e.emp_no = t.emmp_no
+                AND t.title = 'Assistant engineer'); 
+        
+/** subqueries nsted in select and from :
+
+assign emp_no 110022 as a manager to all emplyees from 10001 to 10020 
+and emp_no 110039 as a manager to employees from 10021 to 10040**/ 
+select A.* from 
+(select e.emp_no as employee_id,de. dept_no as dept_code,
+(select emp_no from dept_manager where 
+emp_no= "110022") as manager_id from employees e 
+join  dept_emp de on e.emp_no=de.emp_no
+where e.emp_no between 10001 and 100020
+group by e.emp_no) as A
+union 
+select B.* from 
+(select emp_no as employee_id,
+(select emp_no from dept_manager where 
+emp_no= "110039") as manager_id from employees
+where emp_no between 10001 and 100020) as B
+;  
+
+
+
+select A.* from 
+/** subset A **/ 
+(SELECT 
+    e.emp_no AS employee_ID, min(de.dept_no) as dept_code,
+    (SELECT 
+            emp_no
+        FROM
+            dept_manager
+        WHERE
+            emp_no = 110022) AS manager_ID
+FROM
+    employees e
+    join 
+    dept_emp de 
+    on e.emp_no = de.emp_no 
+
+WHERE
+    e.emp_no between 10001 and 10020
+group by e.emp_no
+ORDER BY e.emp_no) as A
+
+/** subset B **/ 
+UNION 
+select B.* from 
+(SELECT 
+    e.emp_no AS employee_ID, min(de.dept_no) as dept_code,
+    (SELECT 
+            emp_no
+        FROM
+            dept_manager
+        WHERE
+            emp_no = 110039) AS manager_ID
+FROM
+    employees e
+    join 
+    dept_emp de 
+    on e.emp_no = de.emp_no 
+
+WHERE
+    e.emp_no between 10021 and 10040
+group by e.emp_no
+ORDER BY e.emp_no) as B ; 
+
+/** names of employees working as managers
+using join  **/  
+select first_name from employees e join 
+dept_manager dm on e.emp_no= dm.emp_no;
+
+/** names of employees working as managers
+using subqueries **/  
+select e.first_name from employees e 
+where e.emp_no in (select dm.emp_no from dept_manager dm );
+
+/** Extract the information about all department managers 
+who were hired between the 1st of January 1990 and 
+the 1st of January 1995. **/ 
+SELECT 
+    e.*
+FROM
+    employees e
+WHERE
+    e.emp_no IN (SELECT 
+            dm.emp_no
+        FROM
+            dept_manager dm) and hire_date BETWEEN "1990-01-01" AND "1995-01-01";
+    
+/** Select the entire information for all employees 
+whose job title is “Assistant Engineer”.  **/ 
+-- using joins 
+SELECT 
+    e.*, t.title
+FROM
+    employees e
+        JOIN
+    titles t ON e.emp_no = t.emp_no
+WHERE
+    t.title = 'Assistant engineer';
+
+-- using subquery  with in 
+select e.* from employees e where e.emp_no in 
+(select t.emp_no from titles t where title = "assistant engineer" );
+-- using subquery with exists 
+SELECT 
+    e.*
+FROM
+    employees e
+WHERE
+    EXISTS( SELECT 
+            t.emp_no
+        FROM
+            titles t
+        WHERE
+            e.emp_no = t.emp_no
+                AND title = 'assistant engineer'); 
+/** subqueries in select **/ 
+(SELECT 
+    A.*
+FROM
+    (SELECT 
+        e.emp_no AS employee_id,
+            de.dept_no AS dept_code,
+            (SELECT 
+                    dm.emp_no
+                FROM
+                    dept_manager dm
+                WHERE
+                    dm.emp_no = 110022) AS manager_id
+    FROM
+        employees e
+    JOIN dept_emp de ON de.emp_no = e.emp_no
+    WHERE
+        e.emp_no BETWEEN 10001 AND 10020
+    GROUP BY e.emp_no) AS A) 
+    UNION (SELECT 
+    B.*
+FROM
+    (SELECT 
+        e.emp_no AS employee_id,
+            de.dept_no AS dept_code,
+            (SELECT 
+                    dm.emp_no
+                FROM
+                    dept_manager dm
+                WHERE
+                    dm.emp_no = 110039) AS manager_id
+    FROM
+        employees e
+    JOIN dept_emp de ON de.emp_no = e.emp_no
+    WHERE
+        e.emp_no BETWEEN 10021 AND 10040
+    GROUP BY e.emp_no) AS B)
+    
+; 
+/**Starting your code with “DROP TABLE”, 
+create a table called “emp_manager” (emp_no – integer of 11, 
+not null; dept_no – CHAR of 4, null; 
+manager_no – integer of 11, not null) **/ 
+
+Drop table if exists emp_manager; 
+create table if not exists emp_manager ( emp_no int(11) not null,
+    dept_no char(4) null, manager_no int(11) not null); 
+//*
+Fill emp_manager with data about employees, the number of the department they are working in, and their managers.
+
+Your query skeleton must be:
+
+Insert INTO emp_manager SELECT
+
+U.*
+
+FROM
+
+                 (A)
+
+UNION (B) UNION (C) UNION (D) AS U;
+
+A and B should be the same subsets used in the last lecture (SQL Subqueries Nested in SELECT and FROM). In other words, assign employee number 110022 as a manager to all employees from 10001 to 10020 (this must be subset A), and employee number 110039 as a manager to all employees from 10021 to 10040 (this must be subset B).
+
+Use the structure of subset A to create subset C, where you must assign employee number 110039 as a manager to employee 110022.
+
+Following the same logic, create subset D. Here you must do the opposite - assign employee 110022 as a manager to employee 110039.
+
+Your output must contain 42 rows. 
+
+ **/
+insert into emp_manager
+select U.* from 
+
+(select A.*
+from 
+(SELECT 
+        e.emp_no AS employee_id,
+            de.dept_no AS dept_code,
+            (SELECT 
+                    dm.emp_no
+                FROM
+                    dept_manager dm
+                WHERE
+                    dm.emp_no = 110022) AS manager_id
+    FROM
+        employees e
+    JOIN dept_emp de ON de.emp_no = e.emp_no
+    WHERE
+        e.emp_no BETWEEN 10001 AND 10020
+    GROUP BY e.emp_no) AS A
+    union 
+    
+select B.* from 
+    
+(SELECT 
+        e.emp_no AS employee_id,
+            de.dept_no AS dept_code,
+            (SELECT 
+                    dm.emp_no
+                FROM
+                    dept_manager dm
+                WHERE
+                    dm.emp_no = 110039) AS manager_id
+    FROM
+        employees e
+    JOIN dept_emp de ON de.emp_no = e.emp_no
+    WHERE
+        e.emp_no BETWEEN 10021 AND 10040
+    GROUP BY e.emp_no) AS B
+    union 
+    select C.* from 
+(SELECT 
+        e.emp_no AS employee_id,
+            de.dept_no AS dept_code,
+            (SELECT 
+                    dm.emp_no
+                FROM
+                    dept_manager dm
+                WHERE
+                    dm.emp_no = 110039) AS manager_id
+    FROM
+        employees e
+    JOIN dept_emp de ON de.emp_no = e.emp_no
+    WHERE
+        e.emp_no=110022
+    ) AS C 
+    union 
+select D.* from    
+(SELECT 
+        e.emp_no AS employee_id,
+            de.dept_no AS dept_code,
+            (SELECT 
+                    dm.emp_no
+                FROM
+                    dept_manager dm
+                WHERE
+                    dm.emp_no = 110022) AS manager_id
+    FROM
+        employees e
+    JOIN dept_emp de ON de.emp_no = e.emp_no
+    WHERE
+        e.emp_no=110039
+    ) AS D ) as U; 
+/** self join
+get employees who are managers as the same time 
+ **/ 
+
+select * from emp_manager;
+
+
+SELECT 
+    A.emp_no, B.manager_no
+FROM
+    emp_manager A
+       JOIN
+    emp_manager B ON A.emp_no = B.manager_no
+    group by emp_no
+    ;
+    
+/** views **/ 
+/** employee numbers registered in the dept_em more than one **/ 
+select * from dept_emp; 
+select emp_no, count(emp_no) from dept_emp
+group by emp_no
+having count(emp_no)>1;
+/** Create a view that will extract the average salary of all managers 
+registered in the database. Round this value to the nearest cent. **/ 
+
+ CREATE OR REPLACE VIEW v_manager_avg_salary AS
+    SELECT 
+        ROUND(AVG(s.salary), 2)
+    FROM
+        salaries s
+            JOIN
+        emp_manager em ON s.emp_no = em.emp_no;  
+        
+/** stored procedures **/ 
+
+-- start by droping any existing procedure of the same name 
+drop procedure if exists select_employees;  
+-- create procedure to get all employees
+delimiter $$ 
+create procedure select_employees()
+begin 
+select * from employees
+LIMIT 1000;
+end $$
+delimiter ; 
+call select_employees;
+-- create procedure for the average salary 
+Drop procedure if exists average_salary;
+delimiter $$ 
+create procedure average_salary()
+begin 
+select avg(salary) from salaries; 
+end $$
+delimiter ; 
+-- procedure with input parameter
+
