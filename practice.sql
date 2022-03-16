@@ -841,3 +841,72 @@ end $$
 delimiter ; 
 -- procedure with input parameter
 
+/** create a procedure that takes emp_no as parameter  and returns details: first name last name and salary **/ 
+drop procedure if exists employees_salaries; 
+delimiter $$ 
+create procedure employees_salaries( in employee_no integer)
+begin 
+	select e.first_name, e.last_name, s.salary
+    from employees e 
+    join salaries s
+    on e.emp_no=s.emp_no
+    where e.emp_no= employee_no;
+end $$
+delimiter ;
+
+call employees_salaries(10001);
+
+/** procedure for average salary that take emp nb as input **/
+
+delimiter $$
+create procedure average_salary_per_employee (in employee_nb int )
+begin 
+select e.emp_no, e.first_name, e.last_name, avg(s.salary) as average_salary  from employees e join 
+salaries s on e.emp_no= s.emp_no
+where e.emp_no=employee_nb
+group by emp_no;
+end $$
+delimiter ;
+
+-- procedure with output 
+/** Create a procedure called ‘emp_info’ that uses as parameters the first 
+and the last name of an individual, and returns their employee number. **/
+drop procedure if exists emp_info;
+delimiter $$ 
+create procedure emp_info(in p_first varchar(255), in p_last varchar(255), out p_nb int) 
+begin
+select emp_no into p_nb from employees where 
+first_name=p_first and last_name=p_last;
+end $$ 
+delimiter ; 
+
+-- variables 
+/** Create a variable, called ‘v_emp_no’, 
+where you will store the output of the procedure you created in the last exercise.
+
+Call the same procedure, inserting the values ‘Aruna’ and ‘Journel’ as a first and last name respectively.
+
+Finally, select the obtained output. **/
+
+SET @v_emp_no = 0;
+CALL emp_info('Aruna', 'Journel', @v_emp_no);
+SELECT @v_emp_no;
+
+/** Create a function called ‘emp_info’ that takes for parameters 
+the first and last name of an employee, and returns the salary from 
+the newest contract of that employee.
+
+Hint: In the BEGIN-END block of this program, you need to declare and
+ use two variables – v_max_from_date that will be of the DATE type, and v_salary, 
+ that will be of the DECIMAL (10,2) type.
+
+Finally, select this function. **/
+/**
+delimiter $$ 
+create function emp_info(p_first varchar(255),p_last varchar(255)) returns decimal(10,2)
+set @v_salary decimal(10,2)
+set @v_max_from_date date 
+begin 
+select s.salary from salaries s join employees e on 
+e.emp_no= s.emp_no
+**/
