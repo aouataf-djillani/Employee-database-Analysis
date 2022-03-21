@@ -879,7 +879,7 @@ select emp_no into p_nb from employees where
 first_name=p_first and last_name=p_last;
 end $$ 
 delimiter ; 
-
+-- ----------------------------------------------------------------------------------
 -- variables 
 /** Create a variable, called ‘v_emp_no’, 
 where you will store the output of the procedure you created in the last exercise.
@@ -891,6 +891,22 @@ Finally, select the obtained output. **/
 SET @v_emp_no = 0;
 CALL emp_info('Aruna', 'Journel', @v_emp_no);
 SELECT @v_emp_no;
+-- ---------------------------------------------------------------------------------
+-- functions 
+delimiter $$
+create function f_emp_avg_salary( p_emp_no integer) returns decimal(10,2)
+deterministic no sql 0reads sql data 
+begin 
+declare v_avg_salary decimal(10,2);
+SELECT 
+    AVG(s.salary)
+INTO v_avg_salary FROM
+    salaries s
+WHERE
+    s.emp_no = p_emp_no;
+return  v-avg_salary; 
+end $$ 
+delimiter ; 
 
 /** Create a function called ‘emp_info’ that takes for parameters 
 the first and last name of an employee, and returns the salary from 
@@ -901,12 +917,85 @@ Hint: In the BEGIN-END block of this program, you need to declare and
  that will be of the DECIMAL (10,2) type.
 
 Finally, select this function. **/
-/**
+
+-- solution 
+DELIMITER $$
+
+
+CREATE FUNCTION emp_info(p_first_name varchar(255), p_last_name varchar(255)) RETURNS decimal(10,2)
+
+DETERMINISTIC NO SQL READS SQL DATA
+
+BEGIN
+
+
+	DECLARE v_max_from_date date;
+
+
+    DECLARE v_salary decimal(10,2);
+SELECT
+
+    s.salary
+
+INTO v_salary FROM
+
+    salaries s
+
+        JOIN
+
+    employees e  ON e.emp_no = s.emp_no
+                                                                                                                                                              
+WHERE
+
+    e.first_name = p_first_name
+
+        AND e.last_name = p_last_name
+
+        AND s.from_date = v_max_from_date;
+
+       
+
+                RETURN v_salary;
+
+
+END$$
+
+
+DELIMITER ;
+-- call function 
+SELECT EMP_INFO('Aruna', 'Journel');
+-- ----------------------------------------------------------------
+-- global variables: max_connections and max_join_size 
+
+set GLOBAL max_connections = 100;
+-- -----------------------------------------------------------------------
+-- triggers
+
+/** create atrigger: check if hire date >currentdate 
+if true hire date = current  (yy-mm-dd) **/
+
+commit; 
 delimiter $$ 
-create function emp_info(p_first varchar(255),p_last varchar(255)) returns decimal(10,2)
-set @v_salary decimal(10,2)
-set @v_max_from_date date 
+create trigger ch_hire_date
+before insert on employees 
+for each row 
 begin 
-select s.salary from salaries s join employees e on 
-e.emp_no= s.emp_no
-**/
+if new.hire_date > sysdate() then 
+set new.hire_date = date_format(sysdate(), "%d-%m-%y"); 
+end if; 
+end $$
+delimiter ; 
+/** check if it works **/ 
+INSERT employees VALUES ('999904', '1970-01-31', 'John', 'Johnson', 'M', '2025-01-01');   
+
+SELECT  
+
+    *  
+
+FROM  
+
+    employees
+
+ORDER BY emp_no DESC; 
+
+
