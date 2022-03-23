@@ -1,3 +1,4 @@
+-- -------------- ----------------------------------------------------------------
 SELECT 
     *
 FROM
@@ -5,6 +6,7 @@ FROM
 WHERE
     first_name LIKE ('%jack%');
 
+-- --------------------------------------------------------------------------------------------
 
 SELECT 
     *
@@ -12,14 +14,14 @@ FROM
     employees
 WHERE
     first_name NOT LIKE ('%jack%');
-
+-- ------------------------------------------------------------------------------------
 SELECT 
     *
 FROM
     salaries
 WHERE
     salary BETWEEN 66000 AND 70000;
-
+-- ------------------------------------------------------------------------------
 SELECT 
     *
 FROM
@@ -33,27 +35,28 @@ FROM
     departments
 WHERE
     dept_no BETWEEN 'd003' AND 'd006';
-
+-- ----------------------------------------------------
 SELECT 
     *
 FROM
     employees
 WHERE
     first_name IS NOT NULL;
-
+-- ---------------------------------------------------------------------------
 SELECT 
     *
 FROM
     employees
 WHERE
     first_name IS NULL;
+-- ----------------------------------------------------------------------------
 SELECT 
     dept_name
 FROM
     departments
 WHERE
     dept_no IS NOT NULL;
-
+-- ------------------------------------------------------------------------
 /** list of emloyees hired after the 1st of january **/
 SELECT 
     *
@@ -61,7 +64,7 @@ FROM
     employees
 WHERE
     hire_date > '2000-01-01';
-
+-- ----------------------------------------
 SELECT 
     *
 FROM
@@ -998,4 +1001,119 @@ FROM
 
 ORDER BY emp_no DESC; 
 
+-- ----------------------------------------------------------------------
+-- indexes
+create index i_hire_date 
+on employees(hire_date); 
 
+-- faster 
+select * from employees
+where
+hire_date > "2000-01-01"; 
+-- drop the index 
+alter table 
+employees
+drop index 
+ i_hire_date;
+ 
+/** Select all records from the ‘salaries’ table of 
+people whose salary is higher than $89,000 per annum. **/ 
+
+select * from salaries 
+where 
+salary> 89000; 
+
+/** create an index on the ‘salary’ column of that table, 
+and check if it has sped up the search of the same SELECT statement. **/
+
+create index i_salary on salaries(salary); 
+
+select * from salaries 
+where 
+salary> 89000; 
+-- -------------------------------------------------------------------------
+-- Case statements
+SELECT 
+    first_name,
+    CASE gender
+        WHEN 'f' THEN 'female'
+        ELSE 'male'
+    END AS gender
+FROM
+    employees;  
+-- if statement 
+SELECT 
+    first_name, IF(gender = 'm', 'male', 'female') AS gender
+FROM
+    employees; 
+ 
+/** obtain a result set containing the employee number, 
+first name, and last name of 
+all employees with a number higher than 109990. **/ 
+
+SELECT e.emp_no, e.first_name, e.last_name, 
+case 
+when e.emp_no= dm.emp_no then "manager"
+-- or when e.emp_no is not null then manager  
+else "employee" 
+end as position
+
+from 
+	employees e
+    left join dept_manager dm 
+    on e.emp_no= dm.emp_no
+where 
+	e.emp_no> 109990; 
+    
+/** 
+1. Extract a dataset containing the following information about 
+   the managers: employee number, first name, and last name. 
+2. Add two columns at the end – one showing the difference between 
+   the maximum and minimum salary of that employee, 
+
+   and another one saying whether this salary raise was higher 
+   than $30,000 or NOT. **/ 
+
+SELECT 
+    dm.emp_no,
+    e.first_name,
+    e.last_name,
+    MAX(s.salary) - MIN(s.salary) AS salary_difference,
+    CASE
+        WHEN MAX(s.salary) - MIN(s.salary) > 30000 THEN 'this salary raise was higher than $30,000'
+        ELSE 'this salary raise was lower than $30,000'
+    END AS raise
+FROM
+    employees e
+        JOIN
+    dept_manager dm ON dm.emp_no = e.emp_no
+        JOIN
+    salaries s ON s.emp_no = e.emp_no
+GROUP BY s.emp_no;
+	
+
+/** 
+1   Extract the employee number, first name, and
+     last name of the first 100 employees, 
+ 
+2   add a fourth column,
+	 called “current_employee” saying “Is still employed” if the 
+	 employee is still working in the company, 
+	 or “Not an employee anymore” if they aren’t. **/
+     
+SELECT 
+    e.emp_no, e.first_name, e.last_name, 
+    case 
+    when max(de.to_date)< curdate() then "Not an employee anymore"
+    else "is still employed" 
+    end as current_employee
+	
+FROM
+    employees e join dept_emp de on e.emp_no= de.emp_no 
+    group by e.emp_no
+LIMIT 100; 
+
+
+     
+
+    
