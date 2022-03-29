@@ -1,4 +1,5 @@
--- -------------- ----------------------------------------------------------------
+-- -------------- -------------------------------------------------------------------------------------------------------------------------------------------------------
+-- select empoloyees whose first names contain jack 
 SELECT 
     *
 FROM
@@ -6,88 +7,78 @@ FROM
 WHERE
     first_name LIKE ('%jack%');
 
--- --------------------------------------------------------------------------------------------
-
+-- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- select empoloyees whose first names don't contain jack 
 SELECT 
     *
 FROM
     employees
 WHERE
     first_name NOT LIKE ('%jack%');
--- ------------------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- using between 
 SELECT 
     *
 FROM
     salaries
 WHERE
     salary BETWEEN 66000 AND 70000;
--- ------------------------------------------------------------------------------
-SELECT 
-    *
-FROM
-    salaries
-WHERE
-    emp_no BETWEEN '10004' AND '10012';
 
-SELECT 
-    dept_name
-FROM
-    departments
-WHERE
-    dept_no BETWEEN 'd003' AND 'd006';
--- ----------------------------------------------------
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Null values  
 SELECT 
     *
 FROM
     employees
 WHERE
     first_name IS NOT NULL;
--- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SELECT 
     *
 FROM
     employees
 WHERE
     first_name IS NULL;
--- ----------------------------------------------------------------------------
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SELECT 
     dept_name
 FROM
     departments
 WHERE
     dept_no IS NOT NULL;
--- ------------------------------------------------------------------------
-/** list of emloyees hired after the 1st of january **/
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/** list of emloyees hired after the 1st of january 2000**/
 SELECT 
     *
 FROM
     employees
 WHERE
     hire_date > '2000-01-01';
--- ----------------------------------------
-SELECT 
-    *
-FROM
+-- -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/** list of female emloyees hired after the 1st of january 2000 **/ 
+    
+    select * 
+    FROM
     employees
 WHERE
     gender = 'F'
         AND hire_date >= '2000-01-01';
-
+-- -------------------------------------------------------------------------------------------------------- ------------------------------------------------------------- --
+/** salaries higher thann 150000 **/
 SELECT 
     *
 FROM
     salaries
 WHERE
     salary > 150000;
-SELECT DISTINCT
-    gender
-FROM
-    employees;
+
 /** Obtain a list with all different “hire dates” from the “employees” table. **/
 SELECT DISTINCT
     hire_date
 FROM
-    employeese nb of employees in the database **/
+    employeese; 
+    
+/** nb of employees in the database **/ 
 
 SELECT 
     COUNT(emp_no)
@@ -1113,7 +1104,229 @@ FROM
     group by e.emp_no
 LIMIT 100; 
 
-
+-- -------------------------------------------------------------------
+-- The update statement 
+select * from departments_dup order by dept_no; 
+commit; 
      
+update departments_dup
+set 
+dept_no='d011',
+dept_name='Quality control' ;
+rollback; 
+/** Change the “Business Analysis” 
+department name to “Data Analysis”. **/
+commit; 
+update departments 
+set dept_name= "Data Analysi" 
+where dept_name= "Business Analysis" ; 
 
+select * from departments order by dept_name; 
+rollback; 
+
+-- --------------------------------------------------------------------------------
+-- Delete statement 
+commit; 
+select * from titles where emp_no = 999903; 
+
+delete from employees 
+where emp_no = 999903; 
+
+rollback; 
+
+/** Remove the department number 9
+ record from the “departments” table. **/
+ SET autocommit=0;
+ begin; 
+ delete from departments 
+ where dept_no = "d009"; 
+ rollback; 
+ 
+ select * from departments;
+ 
+ 
+ -- --------------------------------------------------------
+ -- coalesce()
+SELECT
+*
+FROM
+departments_dup
+ORDER BY dept_no ASC;
+
+alter table departments_dup 
+add column dept_manager varchar(255) null After dept_name; 
+ commit ;
+ 
+SELECT 
+    dept_no, dept_name, COALESCE(dept_manager, dept_name, 'n/a')
+FROM
+    departments_dup; 
     
+/** Select the department number and name from the ‘departments_dup’ 
+table and add a third column where you name the department number 
+(‘dept_no’) as ‘dept_info’. If ‘dept_no’ does not have a value, 
+use ‘dept_name’. **/ 
+
+SELECT 
+    dept_no,
+    dept_name,
+    COALESCE(dept_no, dept_name, 'n/a') AS dept_info
+FROM
+    departments_dup
+; 
+
+/** Modify the code obtained from the previous exercise 
+in the following way. Apply the IFNULL() function to the values
+ from the first and second column, so that ‘N/A’ is displayed
+ whenever a department number has no value, and ‘Department
+ name not provided’ is shown if there is no value 
+for ‘dept_name’. **/ 
+
+SELECT 
+    ifnull(dept_no,"n/a") as dept_no,
+    ifnull(dept_name,"Department
+ name not provided") as dept_name,
+    COALESCE(dept_no, dept_name, 'n/a') AS dept_info
+FROM
+    departments_dup
+; 
+
+
+-- -----------------------------------------------------------------------------
+-- Final queries
+/** Find the average salary of the male and female
+ employees in each department. **/ 
+SELECT 
+    e.gender, AVG(s.salary)
+FROM
+    employees e 
+    join 
+    salaries s 
+    on 
+    e.emp_no = s.emp_no
+    group by e.gender; 
+    
+/** Find the lowest department number encountered in the 'dept_emp'
+ table. Then, find the highest department number. **/
+ 
+ select min(dept_no) from departments; 
+ -- max dept_no with the name of that department 
+  select dept_name, dept_no from departments
+  where dept_no in (select max(dept_no) from departments); 
+
+/** Obtain a table containing the following three fields for all individuals whose employee number is not
+greater than 10040:
+- employee number
+- the lowest department number among the departments where the employee has worked in (Hint: use
+a subquery to retrieve this value from the 'dept_emp' table)
+- assign '110022' as 'manager' to all individuals whose employee number is lower than or equal to 10020,
+and '110039' to those whose number is between 10021 and 10040 inclusive. **/ 
+select emp_no, min(dept_no), case 
+when emp_no <= 10020 then  110022 
+when emp_no between  10021 and 10040 then 110039
+end 
+ as manager
+ from dept_emp
+ group by emp_no
+ having emp_no<=10040; 
+ 
+ /**  Retrieve a list of all employees
+ that have been hired in 2000 **/
+ 
+ select * from employees where year(hire_date) = 2000; 
+
+/** Retrieve a list of all employees from the ‘titles’
+ table who are engineers. **/ 
+ 
+ select * from titles where title like("%engineer%"); 
+ /** Repeat the exercise, this time retrieving a list of all employees from the ‘titles’ table who are senior
+engineers.**/
+ select * from titles where title like("%senior engineer%"); 
+
+/** 
+Create a procedure that asks you to insert an employee number and that will obtain an output containing
+the same number, as well as the number and name of the last department the employee has worked in.
+**/ 
+delimiter $ 
+create procedure working_dept (in p_emp_no int) 
+begin 
+select 
+de.emp_no,
+de.dept_no,
+d.dept_name
+
+from dept_emp de 
+join departments d 
+on de.dept_no = d.dept_no 
+where de.emp_no = p_emp_no
+and de.from_date=(select max(from_date) from dept_emp where emp_no= p_emp_no);
+end $$
+delimiter ; 
+
+call working_dept(10010);
+/** How many contracts have been registered in the ‘salaries’ table with duration of more than one year and
+of value higher than or equal to $100,000? **/ 
+
+select * from salaries
+where salary >=100000 and datediff( to_date, from_date)> 365; 
+
+/** Create a trigger that checks if the hire date of an employee is higher than the current date. If true, set the
+hire date to equal the current date. Format the output appropriately (YY-mm-dd). **/ 
+delimiter $
+create trigger hire_date
+before insert on employees
+for each row 
+begin 
+if new.hire_date> curdate() then 
+set new.hire_date =dateformat(curdate(), "%y-%m-%d");
+end if; 
+end $$
+delimiter ; 
+
+/** Define a function that retrieves the largest contract salary value of an employee. Apply it to employee
+number 11356. **/ 
+drop function f_max_salary;
+delimiter $ 
+create function f_max_salary(p_emp_no int) returns INT
+deterministic
+begin 
+declare v_highest int; 
+select max(salary) into v_highest  from salaries
+ where emp_no = p_emp_no
+group by emp_no; 
+return v_highest; 
+end $$
+delimiter ;
+-- function call 
+select f_max_salary(11356); 
+
+
+/** Based on the previous exercise, you can now try to create a third function that also accepts a second
+parameter. Let this parameter be a character sequence. Evaluate if its value is 'min' or 'max' and based on
+that retrieve either the lowest or the highest salary, respectively (using the same logic and code structure
+from Exercise 9). If the inserted value is any string value different from ‘min’ or ‘max’, let the function
+return the difference between the highest and the lowest salary of that employee **/
+
+delimiter $ 
+create function f_evaluate_salary(p_emp_no int, p_value varchar(255) ) returns INT
+deterministic
+begin 
+
+declare v_result int; 
+select case
+ when p_value = "max" then max(salary)
+ when p_value = "min" then min(salary)
+ else max(salary) - min(salary)
+ end 
+
+into v_result  from salaries
+ where emp_no = p_emp_no 
+group by emp_no;
+return v_result;
+end $$
+delimiter ;
+
+
+select f_evaluate_salary(11356, 'min');
+select f_evaluate_salary(11356, 'max');
+select f_evaluate_salary(11356, 'maxxx');
