@@ -1,4 +1,13 @@
-# SQL_FOR_DATA_ANALYTICS
+# Analyzing the employees database
+## Steps
+ 1.  Querying and exploring data using MySQL
+ 2. Exporting data and Visualizing it using Tableau  
+## Dataset 
+The sample employee database used in this project was crfeated  through the SQL - MySQL for Data Analytics and Business Intelligence course online. 
+
+It contains information about employees, departments, salaries, job titles...etc 
+ ![employeedb](https://user-images.githubusercontent.com/54501663/167905131-ad14a6da-8f69-4180-8c1a-e5344e87c0be.png)
+
 ## Sample queries
 
 
