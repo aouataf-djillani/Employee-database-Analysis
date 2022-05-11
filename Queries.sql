@@ -520,7 +520,7 @@ WHERE
             e.emp_no = t.emmp_no
                 AND t.title = 'Assistant engineer'); 
         
-/** subqueries nsted in select and from :
+/** subqueries nested in select and from :
 
 assign emp_no 110022 as a manager to all emplyees from 10001 to 10020 
 and emp_no 110039 as a manager to employees from 10021 to 10040**/ 
@@ -541,48 +541,44 @@ where emp_no between 10001 and 100020) as B
 
 
 
-select A.* from 
-/** subset A **/ 
-(SELECT 
-    e.emp_no AS employee_ID, min(de.dept_no) as dept_code,
-    (SELECT 
-            emp_no
-        FROM
-            dept_manager
-        WHERE
-            emp_no = 110022) AS manager_ID
+SELECT 
+    A.*
 FROM
-    employees e
-    join 
-    dept_emp de 
-    on e.emp_no = de.emp_no 
-
-WHERE
-    e.emp_no between 10001 and 10020
-group by e.emp_no
-ORDER BY e.emp_no) as A
-
-/** subset B **/ 
-UNION 
-select B.* from 
-(SELECT 
-    e.emp_no AS employee_ID, min(de.dept_no) as dept_code,
     (SELECT 
-            emp_no
-        FROM
-            dept_manager
-        WHERE
-            emp_no = 110039) AS manager_ID
+        e.emp_no AS employee_ID,
+            MIN(de.dept_no) AS dept_code,
+            (SELECT 
+                    emp_no
+                FROM
+                    dept_manager
+                WHERE
+                    emp_no = 110022) AS manager_ID
+    FROM
+        employees e
+    JOIN dept_emp de ON e.emp_no = de.emp_no
+    WHERE
+        e.emp_no BETWEEN 10001 AND 10020
+    GROUP BY e.emp_no
+    ORDER BY e.emp_no) AS A 
+UNION SELECT 
+    B.*
 FROM
-    employees e
-    join 
-    dept_emp de 
-    on e.emp_no = de.emp_no 
-
-WHERE
-    e.emp_no between 10021 and 10040
-group by e.emp_no
-ORDER BY e.emp_no) as B ; 
+    (SELECT 
+        e.emp_no AS employee_ID,
+            MIN(de.dept_no) AS dept_code,
+            (SELECT 
+                    emp_no
+                FROM
+                    dept_manager
+                WHERE
+                    emp_no = 110039) AS manager_ID
+    FROM
+        employees e
+    JOIN dept_emp de ON e.emp_no = de.emp_no
+    WHERE
+        e.emp_no BETWEEN 10021 AND 10040
+    GROUP BY e.emp_no
+    ORDER BY e.emp_no) AS B; 
 
 /** names of employees working as managers
 using join  **/  
@@ -790,10 +786,10 @@ SELECT
     A.emp_no, B.manager_no
 FROM
     emp_manager A
-       JOIN
+        JOIN
     emp_manager B ON A.emp_no = B.manager_no
-    group by emp_no
-    ;
+GROUP BY emp_no
+;
     
 /** views **/ 
 /** employee numbers registered in the dept_em more than one **/ 
@@ -1199,12 +1195,10 @@ FROM
 SELECT 
     e.gender, AVG(s.salary)
 FROM
-    employees e 
-    join 
-    salaries s 
-    on 
-    e.emp_no = s.emp_no
-    group by e.gender; 
+    employees e
+        JOIN
+    salaries s ON e.emp_no = s.emp_no
+GROUP BY e.gender; 
     
 /** Find the lowest department number encountered in the 'dept_emp'
  table. Then, find the highest department number. **/
@@ -1221,14 +1215,17 @@ greater than 10040:
 a subquery to retrieve this value from the 'dept_emp' table)
 - assign '110022' as 'manager' to all individuals whose employee number is lower than or equal to 10020,
 and '110039' to those whose number is between 10021 and 10040 inclusive. **/ 
-select emp_no, min(dept_no), case 
-when emp_no <= 10020 then  110022 
-when emp_no between  10021 and 10040 then 110039
-end 
- as manager
- from dept_emp
- group by emp_no
- having emp_no<=10040; 
+SELECT 
+    emp_no,
+    MIN(dept_no),
+    CASE
+        WHEN emp_no <= 10020 THEN 110022
+        WHEN emp_no BETWEEN 10021 AND 10040 THEN 110039
+    END AS manager
+FROM
+    dept_emp
+GROUP BY emp_no
+HAVING emp_no <= 10040; 
  
  /**  Retrieve a list of all employees
  that have been hired in 2000 **/
@@ -1238,7 +1235,12 @@ end
 /** Retrieve a list of all employees from the ‘titles’
  table who are engineers. **/ 
  
- select * from titles where title like("%engineer%"); 
+ SELECT 
+    *
+FROM
+    titles
+WHERE
+    title LIKE ('%engineer%'); 
  /** Repeat the exercise, this time retrieving a list of all employees from the ‘titles’ table who are senior
 engineers.**/
  select * from titles where title like("%senior engineer%"); 
@@ -1250,17 +1252,21 @@ the same number, as well as the number and name of the last department the emplo
 delimiter $ 
 create procedure working_dept (in p_emp_no int) 
 begin 
-select 
-de.emp_no,
-de.dept_no,
-d.dept_name
-
-from dept_emp de 
-join departments d 
-on de.dept_no = d.dept_no 
-where de.emp_no = p_emp_no
-and de.from_date=(select max(from_date) from dept_emp where emp_no= p_emp_no);
-end $$
+SELECT 
+    de.emp_no, de.dept_no, d.dept_name
+FROM
+    dept_emp de
+        JOIN
+    departments d ON de.dept_no = d.dept_no
+WHERE
+    de.emp_no = p_emp_no
+AND de.from_date=(SELECT 
+    MAX(from_date)
+FROM
+    dept_emp
+WHERE
+    emp_no = p_emp_no);
+END $$
 delimiter ; 
 
 call working_dept(10010);
